@@ -5,7 +5,7 @@
  ******************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2015, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -108,6 +108,10 @@ acpi_status acpi_ut_mutex_initialize(void)
 	/* Create the reader/writer lock for namespace access */
 
 	status = acpi_ut_create_rw_lock(&acpi_gbl_namespace_rw_lock);
+	if (ACPI_FAILURE(status)) {
+		return_ACPI_STATUS(status);
+	}
+
 	return_ACPI_STATUS(status);
 }
 
@@ -269,8 +273,9 @@ acpi_status acpi_ut_acquire_mutex(acpi_mutex_handle mutex_id)
 			  (u32)this_thread_id,
 			  acpi_ut_get_mutex_name(mutex_id)));
 
-	status = acpi_os_acquire_mutex(acpi_gbl_mutex_info[mutex_id].mutex,
-				       ACPI_WAIT_FOREVER);
+	status =
+	    acpi_os_acquire_mutex(acpi_gbl_mutex_info[mutex_id].mutex,
+				  ACPI_WAIT_FOREVER);
 	if (ACPI_SUCCESS(status)) {
 		ACPI_DEBUG_PRINT((ACPI_DB_MUTEX,
 				  "Thread %u acquired Mutex [%s]\n",
@@ -281,8 +286,9 @@ acpi_status acpi_ut_acquire_mutex(acpi_mutex_handle mutex_id)
 		acpi_gbl_mutex_info[mutex_id].thread_id = this_thread_id;
 	} else {
 		ACPI_EXCEPTION((AE_INFO, status,
-				"Thread %u could not acquire Mutex [0x%X]",
-				(u32)this_thread_id, mutex_id));
+				"Thread %u could not acquire Mutex [%s] (0x%X)",
+				(u32)this_thread_id,
+				acpi_ut_get_mutex_name(mutex_id), mutex_id));
 	}
 
 	return (status);
@@ -317,8 +323,8 @@ acpi_status acpi_ut_release_mutex(acpi_mutex_handle mutex_id)
 	 */
 	if (acpi_gbl_mutex_info[mutex_id].thread_id == ACPI_MUTEX_NOT_ACQUIRED) {
 		ACPI_ERROR((AE_INFO,
-			    "Mutex [0x%X] is not acquired, cannot release",
-			    mutex_id));
+			    "Mutex [%s] (0x%X) is not acquired, cannot release",
+			    acpi_ut_get_mutex_name(mutex_id), mutex_id));
 
 		return (AE_NOT_ACQUIRED);
 	}

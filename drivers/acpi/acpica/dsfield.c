@@ -5,7 +5,7 @@
  *****************************************************************************/
 
 /*
- * Copyright (C) 2000 - 2015, Intel Corp.
+ * Copyright (C) 2000 - 2018, Intel Corp.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,6 +106,7 @@ acpi_ds_create_external_region(acpi_status lookup_status,
 	 * insert the name into the namespace.
 	 */
 	acpi_dm_add_op_to_external_list(op, path, ACPI_TYPE_REGION, 0, 0);
+
 	status = acpi_ns_lookup(walk_state->scope_info, path, ACPI_TYPE_REGION,
 				ACPI_IMODE_LOAD_PASS1, ACPI_NS_SEARCH_PARENT,
 				walk_state, node);
@@ -183,6 +184,7 @@ acpi_ds_create_buffer_field(union acpi_parse_object *op,
 		/* Execute flag should always be set when this function is entered */
 
 		if (!(walk_state->parse_flags & ACPI_PARSE_EXECUTE)) {
+			ACPI_ERROR((AE_INFO, "Parse execute mode is not set"));
 			return_ACPI_STATUS(AE_AML_INTERNAL);
 		}
 
@@ -202,13 +204,13 @@ acpi_ds_create_buffer_field(union acpi_parse_object *op,
 
 		/* Enter the name_string into the namespace */
 
-		status =
-		    acpi_ns_lookup(walk_state->scope_info,
-				   arg->common.value.string, ACPI_TYPE_ANY,
-				   ACPI_IMODE_LOAD_PASS1, flags, walk_state,
-				   &node);
+		status = acpi_ns_lookup(walk_state->scope_info,
+					arg->common.value.string, ACPI_TYPE_ANY,
+					ACPI_IMODE_LOAD_PASS1, flags,
+					walk_state, &node);
 		if (ACPI_FAILURE(status)) {
-			ACPI_ERROR_NAMESPACE(arg->common.value.string, status);
+			ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+					     arg->common.value.string, status);
 			return_ACPI_STATUS(status);
 		}
 	}
@@ -244,8 +246,8 @@ acpi_ds_create_buffer_field(union acpi_parse_object *op,
 	}
 
 	/*
-	 * Remember location in AML stream of the field unit opcode and operands --
-	 * since the buffer and index operands must be evaluated.
+	 * Remember location in AML stream of the field unit opcode and operands
+	 * -- since the buffer and index operands must be evaluated.
 	 */
 	second_desc = obj_desc->common.next_object;
 	second_desc->extra.aml_start = op->named.data;
@@ -310,8 +312,8 @@ acpi_ds_get_field_names(struct acpi_create_field_info *info,
 		switch (arg->common.aml_opcode) {
 		case AML_INT_RESERVEDFIELD_OP:
 
-			position = (u64) info->field_bit_position
-			    + (u64) arg->common.value.size;
+			position = (u64)info->field_bit_position +
+			    (u64)arg->common.value.size;
 
 			if (position > ACPI_UINT32_MAX) {
 				ACPI_ERROR((AE_INFO,
@@ -344,13 +346,13 @@ acpi_ds_get_field_names(struct acpi_create_field_info *info,
 
 			/* access_attribute (attrib_quick, attrib_byte, etc.) */
 
-			info->attribute =
-			    (u8)((arg->common.value.integer >> 8) & 0xFF);
+			info->attribute = (u8)
+			    ((arg->common.value.integer >> 8) & 0xFF);
 
 			/* access_length (for serial/buffer protocols) */
 
-			info->access_length =
-			    (u8)((arg->common.value.integer >> 16) & 0xFF);
+			info->access_length = (u8)
+			    ((arg->common.value.integer >> 16) & 0xFF);
 			break;
 
 		case AML_INT_CONNECTION_OP:
@@ -382,7 +384,9 @@ acpi_ds_get_field_names(struct acpi_create_field_info *info,
 							walk_state,
 							&info->connection_node);
 				if (ACPI_FAILURE(status)) {
-					ACPI_ERROR_NAMESPACE(child->common.
+					ACPI_ERROR_NAMESPACE(walk_state->
+							     scope_info,
+							     child->common.
 							     value.name,
 							     status);
 					return_ACPI_STATUS(status);
@@ -401,7 +405,8 @@ acpi_ds_get_field_names(struct acpi_create_field_info *info,
 						ACPI_NS_DONT_OPEN_SCOPE,
 						walk_state, &info->field_node);
 			if (ACPI_FAILURE(status)) {
-				ACPI_ERROR_NAMESPACE((char *)&arg->named.name,
+				ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+						     (char *)&arg->named.name,
 						     status);
 				return_ACPI_STATUS(status);
 			} else {
@@ -425,8 +430,8 @@ acpi_ds_get_field_names(struct acpi_create_field_info *info,
 
 			/* Keep track of bit position for the next field */
 
-			position = (u64) info->field_bit_position
-			    + (u64) arg->common.value.size;
+			position = (u64)info->field_bit_position +
+			    (u64)arg->common.value.size;
 
 			if (position > ACPI_UINT32_MAX) {
 				ACPI_ERROR((AE_INFO,
@@ -497,12 +502,13 @@ acpi_ds_create_field(union acpi_parse_object *op,
 							&region_node);
 #endif
 		if (ACPI_FAILURE(status)) {
-			ACPI_ERROR_NAMESPACE(arg->common.value.name, status);
+			ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+					     arg->common.value.name, status);
 			return_ACPI_STATUS(status);
 		}
 	}
 
-	ACPI_MEMSET(&info, 0, sizeof(struct acpi_create_field_info));
+	memset(&info, 0, sizeof(struct acpi_create_field_info));
 
 	/* Second arg is the field flags */
 
@@ -556,6 +562,7 @@ acpi_ds_init_field_objects(union acpi_parse_object *op,
 			return_ACPI_STATUS(AE_OK);
 		}
 
+		ACPI_ERROR((AE_INFO, "Parse deferred mode is not set"));
 		return_ACPI_STATUS(AE_AML_INTERNAL);
 	}
 
@@ -616,7 +623,8 @@ acpi_ds_init_field_objects(union acpi_parse_object *op,
 						ACPI_IMODE_LOAD_PASS1, flags,
 						walk_state, &node);
 			if (ACPI_FAILURE(status)) {
-				ACPI_ERROR_NAMESPACE((char *)&arg->named.name,
+				ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+						     (char *)&arg->named.name,
 						     status);
 				if (status != AE_ALREADY_EXISTS) {
 					return_ACPI_STATUS(status);
@@ -679,7 +687,8 @@ acpi_ds_create_bank_field(union acpi_parse_object *op,
 							&region_node);
 #endif
 		if (ACPI_FAILURE(status)) {
-			ACPI_ERROR_NAMESPACE(arg->common.value.name, status);
+			ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+					     arg->common.value.name, status);
 			return_ACPI_STATUS(status);
 		}
 	}
@@ -693,7 +702,8 @@ acpi_ds_create_bank_field(union acpi_parse_object *op,
 			   ACPI_NS_SEARCH_PARENT, walk_state,
 			   &info.register_node);
 	if (ACPI_FAILURE(status)) {
-		ACPI_ERROR_NAMESPACE(arg->common.value.string, status);
+		ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+				     arg->common.value.string, status);
 		return_ACPI_STATUS(status);
 	}
 
@@ -716,11 +726,12 @@ acpi_ds_create_bank_field(union acpi_parse_object *op,
 
 	/*
 	 * Use Info.data_register_node to store bank_field Op
-	 * It's safe because data_register_node will never be used when create bank field
-	 * We store aml_start and aml_length in the bank_field Op for late evaluation
-	 * Used in acpi_ex_prep_field_value(Info)
+	 * It's safe because data_register_node will never be used when create
+	 * bank field \we store aml_start and aml_length in the bank_field Op for
+	 * late evaluation. Used in acpi_ex_prep_field_value(Info)
 	 *
-	 * TBD: Or, should we add a field in struct acpi_create_field_info, like "void *ParentOp"?
+	 * TBD: Or, should we add a field in struct acpi_create_field_info, like
+	 * "void *ParentOp"?
 	 */
 	info.data_register_node = (struct acpi_namespace_node *)op;
 
@@ -762,7 +773,8 @@ acpi_ds_create_index_field(union acpi_parse_object *op,
 			   ACPI_NS_SEARCH_PARENT, walk_state,
 			   &info.register_node);
 	if (ACPI_FAILURE(status)) {
-		ACPI_ERROR_NAMESPACE(arg->common.value.string, status);
+		ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+				     arg->common.value.string, status);
 		return_ACPI_STATUS(status);
 	}
 
@@ -775,7 +787,8 @@ acpi_ds_create_index_field(union acpi_parse_object *op,
 			   ACPI_NS_SEARCH_PARENT, walk_state,
 			   &info.data_register_node);
 	if (ACPI_FAILURE(status)) {
-		ACPI_ERROR_NAMESPACE(arg->common.value.string, status);
+		ACPI_ERROR_NAMESPACE(walk_state->scope_info,
+				     arg->common.value.string, status);
 		return_ACPI_STATUS(status);
 	}
 

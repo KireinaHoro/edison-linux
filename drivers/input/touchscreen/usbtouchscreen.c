@@ -55,11 +55,6 @@
 #include <linux/usb/input.h>
 #include <linux/hid.h>
 
-
-#define DRIVER_VERSION		"v0.6"
-#define DRIVER_AUTHOR		"Daniel Ritz <daniel.ritz@gmx.ch>"
-#define DRIVER_DESC		"USB Touchscreen Driver"
-
 static bool swap_xy;
 module_param(swap_xy, bool, 0644);
 MODULE_PARM_DESC(swap_xy, "If set X and Y axes are swapped.");
@@ -626,6 +621,9 @@ static int dmc_tsc10_init(struct usbtouch_usb *usbtouch)
 		ret = -ENODEV;
 		goto err_out;
 	}
+
+	/* TSC-25 data sheet specifies a delay after the RESET command */
+	msleep(150);
 
 	/* set coordinate output rate */
 	buf[0] = buf[1] = 0xFF;
@@ -1760,8 +1758,8 @@ static struct usb_driver usbtouch_driver = {
 
 module_usb_driver(usbtouch_driver);
 
-MODULE_AUTHOR(DRIVER_AUTHOR);
-MODULE_DESCRIPTION(DRIVER_DESC);
+MODULE_AUTHOR("Daniel Ritz <daniel.ritz@gmx.ch>");
+MODULE_DESCRIPTION("USB Touchscreen Driver");
 MODULE_LICENSE("GPL");
 
 MODULE_ALIAS("touchkitusb");

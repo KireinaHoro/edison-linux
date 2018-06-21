@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2005-2011 Atheros Communications Inc.
- * Copyright (c) 2011-2014 Qualcomm Atheros, Inc.
+ * Copyright (c) 2011-2017 Qualcomm Atheros, Inc.
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -22,6 +22,7 @@
 #define WMI_TLV_CMD_UNSUPPORTED 0
 #define WMI_TLV_PDEV_PARAM_UNSUPPORTED 0
 #define WMI_TLV_VDEV_PARAM_UNSUPPORTED 0
+#define WMI_TLV_MGMT_TX_FRAME_MAX_LEN	64
 
 enum wmi_tlv_grp_id {
 	WMI_TLV_GRP_START = 0x3,
@@ -132,6 +133,7 @@ enum wmi_tlv_cmd_id {
 	WMI_TLV_PRB_REQ_FILTER_RX_CMDID,
 	WMI_TLV_MGMT_TX_CMDID,
 	WMI_TLV_PRB_TMPL_CMDID,
+	WMI_TLV_MGMT_TX_SEND_CMD,
 	WMI_TLV_ADDBA_CLEAR_RESP_CMDID = WMI_TLV_CMD(WMI_TLV_GRP_BA_NEG),
 	WMI_TLV_ADDBA_SEND_CMDID,
 	WMI_TLV_ADDBA_STATUS_CMDID,
@@ -527,6 +529,25 @@ enum wmi_tlv_vdev_param {
 	WMI_TLV_VDEV_PARAM_IBSS_PS_1RX_CHAIN_IN_ATIM_WINDOW_ENABLE,
 };
 
+enum wmi_tlv_peer_flags {
+	WMI_TLV_PEER_AUTH = 0x00000001,
+	WMI_TLV_PEER_QOS = 0x00000002,
+	WMI_TLV_PEER_NEED_PTK_4_WAY = 0x00000004,
+	WMI_TLV_PEER_NEED_GTK_2_WAY = 0x00000010,
+	WMI_TLV_PEER_APSD = 0x00000800,
+	WMI_TLV_PEER_HT = 0x00001000,
+	WMI_TLV_PEER_40MHZ = 0x00002000,
+	WMI_TLV_PEER_STBC = 0x00008000,
+	WMI_TLV_PEER_LDPC = 0x00010000,
+	WMI_TLV_PEER_DYN_MIMOPS = 0x00020000,
+	WMI_TLV_PEER_STATIC_MIMOPS = 0x00040000,
+	WMI_TLV_PEER_SPATIAL_MUX = 0x00200000,
+	WMI_TLV_PEER_VHT = 0x02000000,
+	WMI_TLV_PEER_80MHZ = 0x04000000,
+	WMI_TLV_PEER_PMF = 0x08000000,
+	WMI_TLV_PEER_160MHZ = 0x20000000,
+};
+
 enum wmi_tlv_tag {
 	WMI_TLV_TAG_LAST_RESERVED = 15,
 
@@ -871,6 +892,63 @@ enum wmi_tlv_tag {
 	WMI_TLV_TAG_STRUCT_SAP_OFL_DEL_STA_EVENT,
 	WMI_TLV_TAG_STRUCT_APFIND_CMD_PARAM,
 	WMI_TLV_TAG_STRUCT_APFIND_EVENT_HDR,
+	WMI_TLV_TAG_STRUCT_OCB_SET_SCHED_CMD,
+	WMI_TLV_TAG_STRUCT_OCB_SET_SCHED_EVENT,
+	WMI_TLV_TAG_STRUCT_OCB_SET_CONFIG_CMD,
+	WMI_TLV_TAG_STRUCT_OCB_SET_CONFIG_RESP_EVENT,
+	WMI_TLV_TAG_STRUCT_OCB_SET_UTC_TIME_CMD,
+	WMI_TLV_TAG_STRUCT_OCB_START_TIMING_ADVERT_CMD,
+	WMI_TLV_TAG_STRUCT_OCB_STOP_TIMING_ADVERT_CMD,
+	WMI_TLV_TAG_STRUCT_OCB_GET_TSF_TIMER_CMD,
+	WMI_TLV_TAG_STRUCT_OCB_GET_TSF_TIMER_RESP_EVENT,
+	WMI_TLV_TAG_STRUCT_DCC_GET_STATS_CMD,
+	WMI_TLV_TAG_STRUCT_DCC_CHANNEL_STATS_REQUEST,
+	WMI_TLV_TAG_STRUCT_DCC_GET_STATS_RESP_EVENT,
+	WMI_TLV_TAG_STRUCT_DCC_CLEAR_STATS_CMD,
+	WMI_TLV_TAG_STRUCT_DCC_UPDATE_NDL_CMD,
+	WMI_TLV_TAG_STRUCT_DCC_UPDATE_NDL_RESP_EVENT,
+	WMI_TLV_TAG_STRUCT_DCC_STATS_EVENT,
+	WMI_TLV_TAG_STRUCT_OCB_CHANNEL,
+	WMI_TLV_TAG_STRUCT_OCB_SCHEDULE_ELEMENT,
+	WMI_TLV_TAG_STRUCT_DCC_NDL_STATS_PER_CHANNEL,
+	WMI_TLV_TAG_STRUCT_DCC_NDL_CHAN,
+	WMI_TLV_TAG_STRUCT_QOS_PARAMETER,
+	WMI_TLV_TAG_STRUCT_DCC_NDL_ACTIVE_STATE_CONFIG,
+	WMI_TLV_TAG_STRUCT_ROAM_SCAN_EXTENDED_THRESHOLD_PARAM,
+	WMI_TLV_TAG_STRUCT_ROAM_FILTER_FIXED_PARAM,
+	WMI_TLV_TAG_STRUCT_PASSPOINT_CONFIG_CMD,
+	WMI_TLV_TAG_STRUCT_PASSPOINT_EVENT_HDR,
+	WMI_TLV_TAG_STRUCT_EXTSCAN_CONFIGURE_HOTLIST_SSID_MONITOR_CMD,
+	WMI_TLV_TAG_STRUCT_EXTSCAN_HOTLIST_SSID_MATCH_EVENT,
+	WMI_TLV_TAG_STRUCT_VDEV_TSF_TSTAMP_ACTION_CMD,
+	WMI_TLV_TAG_STRUCT_VDEV_TSF_REPORT_EVENT,
+	WMI_TLV_TAG_STRUCT_GET_FW_MEM_DUMP,
+	WMI_TLV_TAG_STRUCT_UPDATE_FW_MEM_DUMP,
+	WMI_TLV_TAG_STRUCT_FW_MEM_DUMP_PARAMS,
+	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FLUSH,
+	WMI_TLV_TAG_STRUCT_DEBUG_MESG_FLUSH_COMPLETE,
+	WMI_TLV_TAG_STRUCT_PEER_SET_RATE_REPORT_CONDITION,
+	WMI_TLV_TAG_STRUCT_ROAM_SUBNET_CHANGE_CONFIG,
+	WMI_TLV_TAG_STRUCT_VDEV_SET_IE_CMD,
+	WMI_TLV_TAG_STRUCT_RSSI_BREACH_MONITOR_CONFIG,
+	WMI_TLV_TAG_STRUCT_RSSI_BREACH_EVENT,
+	WMI_TLV_TAG_STRUCT_EVENT_INITIAL_WAKEUP,
+	WMI_TLV_TAG_STRUCT_SOC_SET_PCL_CMD,
+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_CMD,
+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_RESPONSE_EVENT,
+	WMI_TLV_TAG_STRUCT_SOC_HW_MODE_TRANSITION_EVENT,
+	WMI_TLV_TAG_STRUCT_VDEV_TXRX_STREAMS,
+	WMI_TLV_TAG_STRUCT_SOC_SET_HW_MODE_RESPONSE_VDEV_MAC_ENTRY,
+	WMI_TLV_TAG_STRUCT_SOC_SET_DUAL_MAC_CONFIG_CMD,
+	WMI_TLV_TAG_STRUCT_SOC_SET_DUAL_MAC_CONFIG_RESPONSE_EVENT,
+	WMI_TLV_TAG_STRUCT_IOAC_SOCK_PATTERN_T,
+	WMI_TLV_TAG_STRUCT_WOW_ENABLE_ICMPV6_NA_FLT_CMD,
+	WMI_TLV_TAG_STRUCT_DIAG_EVENT_LOG_CONFIG,
+	WMI_TLV_TAG_STRUCT_DIAG_EVENT_LOG_SUPPORTED_EVENT,
+	WMI_TLV_TAG_STRUCT_PACKET_FILTER_CONFIG,
+	WMI_TLV_TAG_STRUCT_PACKET_FILTER_ENABLE,
+	WMI_TLV_TAG_STRUCT_SAP_SET_BLACKLIST_PARAM_CMD,
+	WMI_TLV_TAG_STRUCT_MGMT_TX_CMD,
 
 	WMI_TLV_TAG_MAX
 };
@@ -946,12 +1024,56 @@ enum wmi_tlv_service {
 	WMI_TLV_SERVICE_STA_RX_IPA_OFFLOAD_SUPPORT,
 	WMI_TLV_SERVICE_MDNS_OFFLOAD,
 	WMI_TLV_SERVICE_SAP_AUTH_OFFLOAD,
+	WMI_TLV_SERVICE_DUAL_BAND_SIMULTANEOUS_SUPPORT,
+	WMI_TLV_SERVICE_OCB,
+	WMI_TLV_SERVICE_AP_ARPNS_OFFLOAD,
+	WMI_TLV_SERVICE_PER_BAND_CHAINMASK_SUPPORT,
+	WMI_TLV_SERVICE_PACKET_FILTER_OFFLOAD,
+	WMI_TLV_SERVICE_MGMT_TX_HTT,
+	WMI_TLV_SERVICE_MGMT_TX_WMI,
+	WMI_TLV_SERVICE_EXT_MSG,
+	WMI_TLV_SERVICE_MAWC,
+	WMI_TLV_SERVICE_PEER_ASSOC_CONF,
+	WMI_TLV_SERVICE_EGAP,
+	WMI_TLV_SERVICE_STA_PMF_OFFLOAD,
+	WMI_TLV_SERVICE_UNIFIED_WOW_CAPABILITY,
+	WMI_TLV_SERVICE_ENHANCED_PROXY_STA,
+	WMI_TLV_SERVICE_ATF,
+	WMI_TLV_SERVICE_COEX_GPIO,
+	WMI_TLV_SERVICE_AUX_SPECTRAL_INTF,
+	WMI_TLV_SERVICE_AUX_CHAN_LOAD_INTF,
+	WMI_TLV_SERVICE_BSS_CHANNEL_INFO_64,
+	WMI_TLV_SERVICE_ENTERPRISE_MESH,
+	WMI_TLV_SERVICE_RESTRT_CHNL_SUPPORT,
+	WMI_TLV_SERVICE_BPF_OFFLOAD,
+	WMI_TLV_SERVICE_SYNC_DELETE_CMDS,
+	WMI_TLV_SERVICE_SMART_ANTENNA_SW_SUPPORT,
+	WMI_TLV_SERVICE_SMART_ANTENNA_HW_SUPPORT,
+	WMI_TLV_SERVICE_RATECTRL_LIMIT_MAX_MIN_RATES,
+	WMI_TLV_SERVICE_NAN_DATA,
+	WMI_TLV_SERVICE_NAN_RTT,
+	WMI_TLV_SERVICE_11AX,
+	WMI_TLV_SERVICE_DEPRECATED_REPLACE,
+	WMI_TLV_SERVICE_TDLS_CONN_TRACKER_IN_HOST_MODE,
+	WMI_TLV_SERVICE_ENHANCED_MCAST_FILTER,
+	WMI_TLV_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
+	WMI_TLV_SERVICE_MESH_11S,
+	WMI_TLV_SERVICE_HALF_RATE_QUARTER_RATE_SUPPORT,
+	WMI_TLV_SERVICE_VDEV_RX_FILTER,
+	WMI_TLV_SERVICE_P2P_LISTEN_OFFLOAD_SUPPORT,
+	WMI_TLV_SERVICE_MARK_FIRST_WAKEUP_PACKET,
+	WMI_TLV_SERVICE_MULTIPLE_MCAST_FILTER_SET,
+	WMI_TLV_SERVICE_HOST_MANAGED_RX_REORDER,
+	WMI_TLV_SERVICE_FLASH_RDWR_SUPPORT,
+	WMI_TLV_SERVICE_WLAN_STATS_REPORT,
+	WMI_TLV_SERVICE_TX_MSDU_ID_NEW_PARTITION_SUPPORT,
+	WMI_TLV_SERVICE_DFS_PHYERR_OFFLOAD,
 };
 
 #define WMI_SERVICE_IS_ENABLED(wmi_svc_bmap, svc_id, len) \
 	((svc_id) < (len) && \
-	 __le32_to_cpu((wmi_svc_bmap)[(svc_id)/(sizeof(u32))]) & \
-	 BIT((svc_id)%(sizeof(u32))))
+	 __le32_to_cpu((wmi_svc_bmap)[(svc_id) / (sizeof(u32))]) & \
+	 BIT((svc_id) % (sizeof(u32))))
 
 #define SVCMAP(x, y, len) \
 	do { \
@@ -1102,6 +1224,8 @@ wmi_tlv_svc_map(const __le32 *in, unsigned long *out, size_t len)
 	       WMI_SERVICE_MDNS_OFFLOAD, len);
 	SVCMAP(WMI_TLV_SERVICE_SAP_AUTH_OFFLOAD,
 	       WMI_SERVICE_SAP_AUTH_OFFLOAD, len);
+	SVCMAP(WMI_TLV_SERVICE_MGMT_TX_WMI,
+	       WMI_SERVICE_MGMT_TX_WMI, len);
 }
 
 #undef SVCMAP
@@ -1454,6 +1578,182 @@ struct wmi_tlv_stats_ev {
 	__le32 num_chan_stats;
 } __packed;
 
+struct wmi_tlv_p2p_noa_ev {
+	__le32 vdev_id;
+} __packed;
+
+struct wmi_tlv_roam_ev {
+	__le32 vdev_id;
+	__le32 reason;
+	__le32 rssi;
+} __packed;
+
+struct wmi_tlv_wow_add_del_event_cmd {
+	__le32 vdev_id;
+	__le32 is_add;
+	__le32 event_bitmap;
+} __packed;
+
+struct wmi_tlv_wow_enable_cmd {
+	__le32 enable;
+} __packed;
+
+struct wmi_tlv_wow_host_wakeup_ind {
+	__le32 reserved;
+} __packed;
+
+struct wmi_tlv_wow_event_info {
+	__le32 vdev_id;
+	__le32 flag;
+	__le32 wake_reason;
+	__le32 data_len;
+} __packed;
+
+enum wmi_tlv_pattern_type {
+	WOW_PATTERN_MIN = 0,
+	WOW_BITMAP_PATTERN = WOW_PATTERN_MIN,
+	WOW_IPV4_SYNC_PATTERN,
+	WOW_IPV6_SYNC_PATTERN,
+	WOW_WILD_CARD_PATTERN,
+	WOW_TIMER_PATTERN,
+	WOW_MAGIC_PATTERN,
+	WOW_IPV6_RA_PATTERN,
+	WOW_IOAC_PKT_PATTERN,
+	WOW_IOAC_TMR_PATTERN,
+	WOW_PATTERN_MAX
+};
+
+#define WOW_DEFAULT_BITMAP_PATTERN_SIZE		148
+#define WOW_DEFAULT_BITMASK_SIZE		148
+
+struct wmi_tlv_wow_bitmap_pattern {
+	u8 patternbuf[WOW_DEFAULT_BITMAP_PATTERN_SIZE];
+	u8 bitmaskbuf[WOW_DEFAULT_BITMASK_SIZE];
+	__le32 pattern_offset;
+	__le32 pattern_len;
+	__le32 bitmask_len;
+	__le32 pattern_id;
+} __packed;
+
+struct wmi_tlv_wow_add_pattern_cmd {
+	__le32 vdev_id;
+	__le32 pattern_id;
+	__le32 pattern_type;
+} __packed;
+
+struct wmi_tlv_wow_del_pattern_cmd {
+	__le32 vdev_id;
+	__le32 pattern_id;
+	__le32 pattern_type;
+} __packed;
+
+/* TDLS Options */
+enum wmi_tlv_tdls_options {
+	WMI_TLV_TDLS_OFFCHAN_EN = BIT(0),
+	WMI_TLV_TDLS_BUFFER_STA_EN = BIT(1),
+	WMI_TLV_TDLS_SLEEP_STA_EN = BIT(2),
+};
+
+struct wmi_tdls_set_state_cmd {
+	__le32 vdev_id;
+	__le32 state;
+	__le32 notification_interval_ms;
+	__le32 tx_discovery_threshold;
+	__le32 tx_teardown_threshold;
+	__le32 rssi_teardown_threshold;
+	__le32 rssi_delta;
+	__le32 tdls_options;
+	__le32 tdls_peer_traffic_ind_window;
+	__le32 tdls_peer_traffic_response_timeout_ms;
+	__le32 tdls_puapsd_mask;
+	__le32 tdls_puapsd_inactivity_time_ms;
+	__le32 tdls_puapsd_rx_frame_threshold;
+} __packed;
+
+struct wmi_tdls_peer_update_cmd {
+	__le32 vdev_id;
+	struct wmi_mac_addr peer_macaddr;
+	__le32 peer_state;
+} __packed;
+
+enum {
+	WMI_TLV_TDLS_PEER_QOS_AC_VO = BIT(0),
+	WMI_TLV_TDLS_PEER_QOS_AC_VI = BIT(1),
+	WMI_TLV_TDLS_PEER_QOS_AC_BK = BIT(2),
+	WMI_TLV_TDLS_PEER_QOS_AC_BE = BIT(3),
+};
+
+#define WMI_TLV_TDLS_PEER_SP_MASK	0x60
+#define WMI_TLV_TDLS_PEER_SP_LSB	5
+
+struct wmi_tdls_peer_capab {
+	__le32 peer_qos;
+	__le32 buff_sta_support;
+	__le32 off_chan_support;
+	__le32 peer_curr_operclass;
+	__le32 self_curr_operclass;
+	__le32 peer_chan_len;
+	__le32 peer_operclass_len;
+	u8 peer_operclass[WMI_TDLS_MAX_SUPP_OPER_CLASSES];
+	__le32 is_peer_responder;
+	__le32 pref_offchan_num;
+	__le32 pref_offchan_bw;
+} __packed;
+
+struct wmi_tlv_adaptive_qcs {
+	__le32 enable;
+} __packed;
+
+/**
+ * wmi_tlv_tx_pause_id - firmware tx queue pause reason types
+ *
+ * @WMI_TLV_TX_PAUSE_ID_MCC: used for by multi-channel firmware scheduler.
+ *		Only vdev_map is valid.
+ * @WMI_TLV_TX_PAUSE_ID_AP_PEER_PS: peer in AP mode is asleep.
+ *		Only peer_id is valid.
+ * @WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD: Only peer_id and tid_map are valid.
+ * @WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA: Only vdev_map is valid.
+ * @WMI_TLV_TX_PAUSE_ID_P2P_GO_PS: Only vdev_map is valid.
+ * @WMI_TLV_TX_PAUSE_ID_STA_ADD_BA: Only peer_id and tid_map are valid.
+ * @WMI_TLV_TX_PAUSE_ID_AP_PS: When all peers are asleep in AP mode. Only
+ *		vdev_map is valid.
+ * @WMI_TLV_TX_PAUSE_ID_IBSS_PS: When all peers are asleep in IBSS mode. Only
+ *		vdev_map is valid.
+ * @WMI_TLV_TX_PAUSE_ID_HOST: Host itself requested tx pause.
+ */
+enum wmi_tlv_tx_pause_id {
+	WMI_TLV_TX_PAUSE_ID_MCC = 1,
+	WMI_TLV_TX_PAUSE_ID_AP_PEER_PS = 2,
+	WMI_TLV_TX_PAUSE_ID_AP_PEER_UAPSD = 3,
+	WMI_TLV_TX_PAUSE_ID_P2P_CLI_NOA = 4,
+	WMI_TLV_TX_PAUSE_ID_P2P_GO_PS = 5,
+	WMI_TLV_TX_PAUSE_ID_STA_ADD_BA = 6,
+	WMI_TLV_TX_PAUSE_ID_AP_PS = 7,
+	WMI_TLV_TX_PAUSE_ID_IBSS_PS = 8,
+	WMI_TLV_TX_PAUSE_ID_HOST = 21,
+};
+
+enum wmi_tlv_tx_pause_action {
+	WMI_TLV_TX_PAUSE_ACTION_STOP,
+	WMI_TLV_TX_PAUSE_ACTION_WAKE,
+};
+
+struct wmi_tlv_tx_pause_ev {
+	__le32 pause_id;
+	__le32 action;
+	__le32 vdev_map;
+	__le32 peer_id;
+	__le32 tid_map;
+} __packed;
+
 void ath10k_wmi_tlv_attach(struct ath10k *ar);
 
+struct wmi_tlv_mgmt_tx_cmd {
+	__le32 vdev_id;
+	__le32 desc_id;
+	__le32 chanfreq;
+	__le64 paddr;
+	__le32 frame_len;
+	__le32 buf_len;
+} __packed;
 #endif

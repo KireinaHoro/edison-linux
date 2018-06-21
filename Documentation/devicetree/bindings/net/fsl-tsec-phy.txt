@@ -57,6 +57,10 @@ Properties:
     "rgmii-id", as all other connection types are detected by hardware.
   - fsl,magic-packet : If present, indicates that the hardware supports
     waking up via magic packet.
+  - fsl,wake-on-filer : If present, indicates that the hardware supports
+    waking up by Filer General Purpose Interrupt (FGPI) asserted on the
+    Rx int line.  This is an advanced power management capability allowing
+    certain packet types (user) defined by filer rules to wake up the system.
   - bd-stash : If present, indicates that the hardware supports stashing
     buffer descriptors in the L2.
   - rx-stash-len : Denotes the number of bytes of a received buffer to stash
@@ -132,7 +136,7 @@ Clock Properties:
 
 Example:
 
-	ptp_clock@24E00 {
+	ptp_clock@24e00 {
 		compatible = "fsl,etsec-ptp";
 		reg = <0x24E00 0xB0>;
 		interrupts = <12 0x8 13 0x8>;

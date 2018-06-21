@@ -610,6 +610,9 @@ static int mc13783_probe(struct snd_soc_codec *codec)
 {
 	struct mc13783_priv *priv = snd_soc_codec_get_drvdata(codec);
 
+	snd_soc_codec_init_regmap(codec,
+				  dev_get_regmap(codec->dev->parent, NULL));
+
 	/* these are the reset values */
 	mc13xxx_reg_write(priv->mc13xxx, MC13783_AUDIO_RX0, 0x25893);
 	mc13xxx_reg_write(priv->mc13xxx, MC13783_AUDIO_RX1, 0x00d35A);
@@ -650,14 +653,14 @@ static int mc13783_remove(struct snd_soc_codec *codec)
 #define MC13783_FORMATS (SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |\
 	SNDRV_PCM_FMTBIT_S24_LE)
 
-static struct snd_soc_dai_ops mc13783_ops_dac = {
+static const struct snd_soc_dai_ops mc13783_ops_dac = {
 	.hw_params	= mc13783_pcm_hw_params_dac,
 	.set_fmt	= mc13783_set_fmt_async,
 	.set_sysclk	= mc13783_set_sysclk_dac,
 	.set_tdm_slot	= mc13783_set_tdm_slot_dac,
 };
 
-static struct snd_soc_dai_ops mc13783_ops_codec = {
+static const struct snd_soc_dai_ops mc13783_ops_codec = {
 	.hw_params	= mc13783_pcm_hw_params_codec,
 	.set_fmt	= mc13783_set_fmt_async,
 	.set_sysclk	= mc13783_set_sysclk_codec,
@@ -698,7 +701,7 @@ static struct snd_soc_dai_driver mc13783_dai_async[] = {
 	},
 };
 
-static struct snd_soc_dai_ops mc13783_ops_sync = {
+static const struct snd_soc_dai_ops mc13783_ops_sync = {
 	.hw_params	= mc13783_pcm_hw_params_sync,
 	.set_fmt	= mc13783_set_fmt_sync,
 	.set_sysclk	= mc13783_set_sysclk_sync,
@@ -728,21 +731,17 @@ static struct snd_soc_dai_driver mc13783_dai_sync[] = {
 	}
 };
 
-static struct regmap *mc13783_get_regmap(struct device *dev)
-{
-	return dev_get_regmap(dev->parent, NULL);
-}
-
-static struct snd_soc_codec_driver soc_codec_dev_mc13783 = {
+static const struct snd_soc_codec_driver soc_codec_dev_mc13783 = {
 	.probe		= mc13783_probe,
 	.remove		= mc13783_remove,
-	.get_regmap	= mc13783_get_regmap,
-	.controls	= mc13783_control_list,
-	.num_controls	= ARRAY_SIZE(mc13783_control_list),
-	.dapm_widgets	= mc13783_dapm_widgets,
-	.num_dapm_widgets = ARRAY_SIZE(mc13783_dapm_widgets),
-	.dapm_routes	= mc13783_routes,
-	.num_dapm_routes = ARRAY_SIZE(mc13783_routes),
+	.component_driver = {
+		.controls		= mc13783_control_list,
+		.num_controls		= ARRAY_SIZE(mc13783_control_list),
+		.dapm_widgets		= mc13783_dapm_widgets,
+		.num_dapm_widgets	= ARRAY_SIZE(mc13783_dapm_widgets),
+		.dapm_routes		= mc13783_routes,
+		.num_dapm_routes	= ARRAY_SIZE(mc13783_routes),
+	},
 };
 
 static int __init mc13783_codec_probe(struct platform_device *pdev)

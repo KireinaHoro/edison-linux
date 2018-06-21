@@ -35,9 +35,6 @@
 #include <linux/init.h>
 #include <linux/security.h>
 #include <linux/types.h>
-#include <linux/netfilter.h>
-#include <linux/netfilter_ipv4.h>
-#include <linux/netfilter_ipv6.h>
 #include <linux/slab.h>
 #include <linux/ip.h>
 #include <linux/tcp.h>
@@ -455,7 +452,7 @@ int selinux_xfrm_postroute_last(u32 sk_sid, struct sk_buff *skb,
 	if (dst) {
 		struct dst_entry *iter;
 
-		for (iter = dst; iter != NULL; iter = iter->child) {
+		for (iter = dst; iter != NULL; iter = xfrm_dst_child(iter)) {
 			struct xfrm_state *x = iter->xfrm;
 
 			if (x && selinux_authorizable_xfrm(x))
